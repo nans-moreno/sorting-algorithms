@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+2#!/usr/bin/env python3
 '''
 Lanceur pour CosmiSort avec deux modes:
 1. Mode graphique: visualisation des algorithmes de tri

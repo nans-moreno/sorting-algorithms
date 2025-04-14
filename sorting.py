@@ -1,7 +1,7 @@
 '''
 Module containing implementations of various sorting algorithms.
 '''
-from typing import List, TypeVar
+from typing import List, TypeVar, Callable
 
 T = TypeVar('T')  # Allows sorting lists of various comparable types
 
@@ -212,6 +212,137 @@ def comb_sort(data: List[T]) -> None:
             if data[i] > data[i + gap]:
                 data[i], data[i + gap] = data[i + gap], data[i]
                 swapped = True
+
+def sort_letters(letters: str, algorithm: Callable[[List[str]], None]) -> str:
+    """
+    Trie une chaîne de lettres en utilisant l'algorithme spécifié.
+    
+    Args:
+        letters: La chaîne de lettres à trier
+        algorithm: L'algorithme de tri à utiliser
+        
+    Returns:
+        La chaîne de lettres triée
+    """
+    # Convertir la chaîne en liste de caractères
+    letter_list = list(letters)
+    
+    # Appliquer l'algorithme de tri
+    if algorithm == merge_sort:
+        # Pour merge_sort qui retourne une nouvelle liste
+        letter_list = algorithm(letter_list)
+    else:
+        # Pour les algorithmes de tri qui modifient la liste en place
+        algorithm(letter_list)
+    
+    # Reconvertir la liste en chaîne
+    return ''.join(letter_list)
+
+def sort_letters_ignore_case(letters: str, algorithm: Callable[[List[str]], None]) -> str:
+    """
+    Trie une chaîne de lettres alphabétiquement en ignorant la casse.
+    
+    Args:
+        letters: La chaîne de lettres à trier
+        algorithm: L'algorithme de tri à utiliser
+        
+    Returns:
+        La chaîne de lettres triée alphabétiquement
+    """
+    # Créer une liste de tuples (lettre minuscule, lettre originale)
+    letter_tuples = [(letter.lower(), letter) for letter in letters]
+    
+    # Définir une fonction wrapper qui utilise l'algorithme spécifié
+    def sort_wrapper(lst):
+        # Pour les algorithmes de tri en place, on doit modifier la comparaison
+        # Cette solution fonctionne pour tous les algorithmes de tri
+        if algorithm == merge_sort:
+            # Cas spécial pour merge_sort qui retourne une nouvelle liste
+            temp_list = [(c.lower(), c) for c in lst]
+            sorted_list = algorithm(temp_list)
+            # Mettre à jour lst avec les valeurs triées
+            for i in range(len(lst)):
+                if i < len(sorted_list):
+                    lst[i] = sorted_list[i][1]  # Utiliser la lettre originale
+            return lst
+        else:
+            # Pour les autres algorithmes qui modifient la liste en place
+            # On crée une liste temporaire pour le tri
+            temp_list = [(c.lower(), i) for i, c in enumerate(lst)]
+            algorithm(temp_list)  # Trie sur la lettre minuscule
+            
+            # Réorganiser la liste originale basée sur le résultat du tri
+            result = [None] * len(lst)
+            for i, (_, original_idx) in enumerate(temp_list):
+                result[i] = lst[original_idx]
+            
+            # Copier le résultat dans la liste originale
+            for i in range(len(lst)):
+                lst[i] = result[i]
+    
+    # Convertir la chaîne en liste de caractères
+    letter_list = list(letters)
+    
+    # Appliquer la fonction wrapper
+    sort_wrapper(letter_list)
+    
+    # Reconvertir la liste en chaîne
+    return ''.join(letter_list)
+
+def get_letter_ascii_values(letters: str) -> List[tuple]:
+    """
+    Retourne les valeurs ASCII des lettres et leur position.
+    Utile pour l'affichage et la démonstration.
+    
+    Args:
+        letters: La chaîne de lettres
+        
+    Returns:
+        Une liste de tuples (lettre, code ASCII)
+    """
+    return [(letter, ord(letter)) for letter in letters]
+
+def sort_with_explanation(letters: str, algorithm: Callable[[List[str]], None], ignore_case: bool = False) -> tuple:
+    """
+    Trie des lettres et fournit des explications sur les codes ASCII.
+    
+    Args:
+        letters: La chaîne de lettres à trier
+        algorithm: L'algorithme de tri à utiliser
+        ignore_case: Si True, ignore la casse lors du tri
+        
+    Returns:
+        Un tuple (chaîne triée, explications)
+    """
+    # Valeurs ASCII avant le tri
+    ascii_before = get_letter_ascii_values(letters)
+    
+    # Trier les lettres
+    if ignore_case:
+        sorted_letters = sort_letters_ignore_case(letters, algorithm)
+        sort_method = f"{algorithm.__name__} (ignorant la casse)"
+    else:
+        sorted_letters = sort_letters(letters, algorithm)
+        sort_method = algorithm.__name__
+    
+    # Valeurs ASCII après le tri
+    ascii_after = get_letter_ascii_values(sorted_letters)
+    
+    # Créer l'explication
+    explanation = [
+        f"Avant le tri:",
+        ", ".join([f"'{letter}' (ASCII {code})" for letter, code in ascii_before]),
+        f"\nAprès le tri avec {sort_method}:"
+    ]
+    
+    if ignore_case:
+        explanation.append("(Tri alphabétique ignorant la casse - A et a sont équivalents)")
+    else:
+        explanation.append("(Tri selon les codes ASCII - les majuscules apparaissent avant les minuscules)")
+        
+    explanation.append(", ".join([f"'{letter}' (ASCII {code})" for letter, code in ascii_after]))
+    
+    return sorted_letters, "\n".join(explanation)
 
 # --- Visualization Generators ---
 
